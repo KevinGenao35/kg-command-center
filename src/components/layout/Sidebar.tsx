@@ -14,6 +14,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Zap,
+  Receipt,
 } from "lucide-react";
 
 const navItems = [
@@ -24,6 +25,7 @@ const navItems = [
   { href: "/university", label: "University", icon: GraduationCap },
   { href: "/finance", label: "Finance", icon: Wallet },
   { href: "/calendar", label: "Calendar", icon: CalendarDays },
+  { href: "/cotizaciones", label: "Cotizaciones", icon: Receipt },
 ];
 
 export default function Sidebar() {
