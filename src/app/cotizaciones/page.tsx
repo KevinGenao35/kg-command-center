@@ -210,7 +210,7 @@ function CotizacionDoc({ cot }: { cot: (typeof cotizaciones)[0] }) {
               <img
                 src="/rice-logo.png"
                 alt="Rice Intelligence"
-                style={{ height: "32px", width: "auto" }}
+                style={{ height: "56px", width: "auto" }}
               />
             </div>
 
