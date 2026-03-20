@@ -1,9 +1,9 @@
 "use client";
 
-import { useRef } from "react";
-import { Download, FileText } from "lucide-react";
+import { useRef, useState } from "react";
+import { Download, Printer, FileText } from "lucide-react";
 
-/* ─── DATA: Edit this section to generate new cotizaciones ─── */
+/* ─── DATA ─── */
 
 const cotizaciones = [
   {
@@ -61,219 +61,305 @@ const cotizaciones = [
 
 const emisor = {
   name: "Rice Intelligence, S.R.L.",
-  address: "Calle Teatro Nacional No. 150, El Millon, Santo Domingo",
+  address: "Calle Teatro Nacional No. 150",
+  city: "El Millon, Santo Domingo, D.N.",
   phone: "+1 (829) 598-9200",
   email: "info@riceintelligence.com",
   website: "www.riceintelligence.com",
   rnc: "1-33-60315-2",
 };
 
-/* ─── HELPERS ─── */
-
 function fmt(n: number) {
   return "$" + n.toLocaleString("en-US", { minimumFractionDigits: 0 });
 }
 
-/* ─── COTIZACION CARD (print-ready) ─── */
+/* ─── COTIZACION DOCUMENT ─── */
 
 function CotizacionDoc({ cot }: { cot: (typeof cotizaciones)[0] }) {
   const printRef = useRef<HTMLDivElement>(null);
+  const [downloading, setDownloading] = useState(false);
   const subtotal = cot.items.reduce((s, i) => s + i.qty * i.price, 0);
   const tax = Math.round(subtotal * cot.taxRate);
   const total = subtotal + tax;
+
+  const handleDownloadPDF = async () => {
+    if (!printRef.current) return;
+    setDownloading(true);
+    try {
+      const html2canvas = (await import("html2canvas-pro")).default;
+      const { jsPDF } = await import("jspdf");
+      const canvas = await html2canvas(printRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+      });
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`${cot.id}-${cot.client.name.replace(/\s+/g, "-")}.pdf`);
+    } catch (err) {
+      console.error("PDF generation failed:", err);
+    }
+    setDownloading(false);
+  };
 
   const handlePrint = () => {
     if (!printRef.current) return;
     const content = printRef.current.innerHTML;
     const win = window.open("", "_blank");
     if (!win) return;
-    win.document.write(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8" />
-        <title>${cot.id} - ${cot.client.name}</title>
-        <style>
-          @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap');
-          * { margin: 0; padding: 0; box-sizing: border-box; }
-          body { font-family: 'DM Sans', sans-serif; background: white; color: #1a1a2e; }
-          @media print {
-            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            @page { size: A4; margin: 0; }
-          }
-        </style>
-      </head>
-      <body>${content}</body>
-      </html>
-    `);
+    win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8" /><title>${cot.id}</title>
+      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+      <style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'DM Sans',sans-serif;background:white}
+      @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}@page{size:A4;margin:0}}</style>
+      </head><body>${content}</body></html>`);
     win.document.close();
-    setTimeout(() => { win.print(); }, 500);
+    setTimeout(() => win.print(), 600);
   };
 
   return (
-    <div className="mb-12">
-      {/* Download button */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <FileText size={20} style={{ color: "#3B82F6" }} />
-          <span className="text-lg font-semibold" style={{ color: "#F1F5F9" }}>
+    <div style={{ marginBottom: "48px" }}>
+      {/* Header bar */}
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        marginBottom: "16px", padding: "0 4px",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <FileText size={18} color="#3B82F6" />
+          <span style={{ fontSize: "15px", fontWeight: 600, color: "#F1F5F9" }}>
             {cot.id} &mdash; {cot.title}
           </span>
         </div>
-        <button
-          onClick={handlePrint}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200"
-          style={{
-            background: "linear-gradient(135deg, #3B82F6, #2563EB)",
-            color: "white",
-            boxShadow: "0 0 16px rgba(59, 130, 246, 0.3)",
-          }}
-        >
-          <Download size={16} />
-          Descargar PDF
-        </button>
+        <div style={{ display: "flex", gap: "8px" }}>
+          <button
+            onClick={handlePrint}
+            style={{
+              display: "flex", alignItems: "center", gap: "6px",
+              padding: "8px 14px", borderRadius: "8px", fontSize: "13px", fontWeight: 500,
+              background: "rgba(255,255,255,0.06)", color: "#94A3B8", border: "1px solid rgba(255,255,255,0.1)",
+              cursor: "pointer", transition: "all 0.2s",
+            }}
+          >
+            <Printer size={14} />
+            Imprimir
+          </button>
+          <button
+            onClick={handleDownloadPDF}
+            disabled={downloading}
+            style={{
+              display: "flex", alignItems: "center", gap: "6px",
+              padding: "8px 16px", borderRadius: "8px", fontSize: "13px", fontWeight: 600,
+              background: "linear-gradient(135deg, #3B82F6, #2563EB)", color: "white",
+              border: "none", cursor: downloading ? "wait" : "pointer",
+              boxShadow: "0 0 16px rgba(59,130,246,0.25)", transition: "all 0.2s",
+              opacity: downloading ? 0.7 : 1,
+            }}
+          >
+            <Download size={14} />
+            {downloading ? "Generando..." : "Descargar PDF"}
+          </button>
+        </div>
       </div>
 
-      {/* Printable document */}
-      <div
-        ref={printRef}
-        style={{ background: "white", borderRadius: "12px", overflow: "hidden" }}
-      >
-        <div style={{ width: "794px", minHeight: "1123px", margin: "0 auto", position: "relative", background: "white" }}>
-
-          {/* Blue wave header */}
+      {/* A4 Paper container */}
+      <div style={{
+        display: "flex", justifyContent: "center",
+        filter: "drop-shadow(0 4px 24px rgba(0,0,0,0.4))",
+      }}>
+        <div
+          ref={printRef}
+          style={{
+            width: "595px",  /* A4 at 72dpi */
+            minHeight: "842px",
+            background: "white",
+            borderRadius: "4px",
+            overflow: "hidden",
+            position: "relative",
+          }}
+        >
+          {/* Top accent bar */}
           <div style={{
-            position: "absolute", top: 0, right: 0, width: "120px", height: "100%",
-            background: "linear-gradient(180deg, #1e3a8a 0%, #2563eb 30%, #3b82f6 60%, #1e3a8a 100%)",
-            borderRadius: "0 0 0 40px",
-            clipPath: "polygon(30% 0%, 100% 0%, 100% 100%, 0% 100%, 30% 85%, 10% 70%, 25% 55%, 15% 40%, 30% 25%, 20% 12%)",
+            height: "6px", width: "100%",
+            background: "linear-gradient(90deg, #1e3a8a, #3b82f6, #1e3a8a)",
           }} />
 
-          {/* Content */}
-          <div style={{ padding: "48px 56px", position: "relative", zIndex: 1 }}>
+          {/* Right side accent stripe */}
+          <div style={{
+            position: "absolute", top: 0, right: 0,
+            width: "48px", height: "100%",
+            background: "linear-gradient(180deg, #1e3a8a 0%, #2563eb 50%, #1e3a8a 100%)",
+            opacity: 0.9,
+          }} />
 
-            {/* Logo + company */}
-            <div style={{ display: "flex", alignItems: "center", gap: "14px", marginBottom: "8px" }}>
+          {/* Content area */}
+          <div style={{ padding: "36px 80px 36px 40px", position: "relative", zIndex: 1 }}>
+
+            {/* Logo + Company */}
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
               <div style={{
-                width: "48px", height: "48px", borderRadius: "12px",
+                width: "36px", height: "36px", borderRadius: "8px",
                 background: "linear-gradient(135deg, #1e3a8a, #3b82f6)",
                 display: "flex", alignItems: "center", justifyContent: "center",
-                color: "white", fontFamily: "Outfit, sans-serif", fontWeight: 800, fontSize: "22px",
-              }}>
-                R
-              </div>
-              <span style={{ fontFamily: "Outfit, sans-serif", fontWeight: 700, fontSize: "18px", color: "#1e3a8a" }}>
-                Rice Intelligence
-              </span>
+                color: "white", fontFamily: "Outfit, sans-serif", fontWeight: 800, fontSize: "18px",
+              }}>R</div>
+              <span style={{
+                fontFamily: "Outfit, sans-serif", fontWeight: 700,
+                fontSize: "15px", color: "#1e3a8a",
+              }}>Rice Intelligence</span>
             </div>
 
             {/* Title */}
             <h1 style={{
-              fontFamily: "Outfit, sans-serif", fontWeight: 800, fontSize: "36px",
-              color: "#1e3a8a", margin: "16px 0 4px", lineHeight: 1.15,
+              fontFamily: "Outfit, sans-serif", fontWeight: 800,
+              fontSize: "28px", color: "#1e3a8a", lineHeight: 1.2, marginBottom: "2px",
             }}>
-              Cotizacion de<br />Servicios
+              Cotizacion de Servicios
             </h1>
-            <p style={{ fontSize: "13px", color: "#64748b", marginBottom: "28px" }}>
+            <p style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "24px" }}>
               {cot.id} &bull; {cot.date}
             </p>
 
-            {/* Client + Emisor */}
-            <div style={{ display: "flex", gap: "40px", marginBottom: "32px" }}>
+            {/* Client + Emisor side by side */}
+            <div style={{ display: "flex", gap: "24px", marginBottom: "24px" }}>
               <div style={{ flex: 1 }}>
-                <p style={{ fontSize: "13px", fontWeight: 700, color: "#1e3a8a", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                  Datos del Cliente
-                </p>
-                <p style={{ fontSize: "14px", color: "#1a1a2e", lineHeight: 1.8 }}>
-                  {cot.client.name}<br />
-                  {cot.client.address}<br />
-                  {cot.client.phone}<br />
-                  {cot.client.email}<br />
-                  RNC: {cot.client.rnc}
-                </p>
+                <p style={{
+                  fontSize: "10px", fontWeight: 700, color: "#1e3a8a",
+                  textTransform: "uppercase", letterSpacing: "1px", marginBottom: "6px",
+                  borderBottom: "2px solid #3b82f6", paddingBottom: "4px", display: "inline-block",
+                }}>Datos del Cliente</p>
+                <div style={{ fontSize: "11.5px", color: "#334155", lineHeight: 1.7, marginTop: "6px" }}>
+                  <p style={{ fontWeight: 600, color: "#0f172a" }}>{cot.client.name}</p>
+                  <p>{cot.client.address}</p>
+                  <p>{cot.client.phone}</p>
+                  <p>{cot.client.email}</p>
+                  <p>RNC: {cot.client.rnc}</p>
+                </div>
               </div>
               <div style={{ flex: 1 }}>
-                <p style={{ fontSize: "13px", fontWeight: 700, color: "#1e3a8a", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                  Datos del Emisor
-                </p>
-                <p style={{ fontSize: "14px", color: "#1a1a2e", lineHeight: 1.8 }}>
-                  {emisor.name}<br />
-                  {emisor.address}<br />
-                  {emisor.phone}<br />
-                  {emisor.email}<br />
-                  RNC: {emisor.rnc}
-                </p>
+                <p style={{
+                  fontSize: "10px", fontWeight: 700, color: "#1e3a8a",
+                  textTransform: "uppercase", letterSpacing: "1px", marginBottom: "6px",
+                  borderBottom: "2px solid #3b82f6", paddingBottom: "4px", display: "inline-block",
+                }}>Datos del Emisor</p>
+                <div style={{ fontSize: "11.5px", color: "#334155", lineHeight: 1.7, marginTop: "6px" }}>
+                  <p style={{ fontWeight: 600, color: "#0f172a" }}>{emisor.name}</p>
+                  <p>{emisor.address}</p>
+                  <p>{emisor.city}</p>
+                  <p>{emisor.phone}</p>
+                  <p>{emisor.email}</p>
+                  <p>RNC: {emisor.rnc}</p>
+                </div>
               </div>
             </div>
 
-            {/* Table */}
-            <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "24px" }}>
+            {/* Products table */}
+            <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "16px", fontSize: "11px" }}>
               <thead>
-                <tr style={{ background: "#1e3a8a" }}>
-                  <th style={{ padding: "12px 16px", textAlign: "left", color: "white", fontSize: "12px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", borderRadius: "8px 0 0 0" }}>Producto</th>
-                  <th style={{ padding: "12px 16px", textAlign: "center", color: "white", fontSize: "12px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", width: "80px" }}>Cant.</th>
-                  <th style={{ padding: "12px 16px", textAlign: "right", color: "white", fontSize: "12px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", width: "120px" }}>Precio</th>
-                  <th style={{ padding: "12px 16px", textAlign: "right", color: "white", fontSize: "12px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", width: "120px", borderRadius: "0 8px 0 0" }}>Subtotal</th>
+                <tr>
+                  <th style={{
+                    padding: "10px 12px", textAlign: "left", color: "white",
+                    fontSize: "9.5px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.8px",
+                    background: "#1e3a8a", borderRadius: "6px 0 0 0",
+                  }}>Producto</th>
+                  <th style={{
+                    padding: "10px 8px", textAlign: "center", color: "white",
+                    fontSize: "9.5px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.8px",
+                    background: "#1e3a8a", width: "55px",
+                  }}>Cant.</th>
+                  <th style={{
+                    padding: "10px 12px", textAlign: "right", color: "white",
+                    fontSize: "9.5px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.8px",
+                    background: "#1e3a8a", width: "80px",
+                  }}>Precio</th>
+                  <th style={{
+                    padding: "10px 12px", textAlign: "right", color: "white",
+                    fontSize: "9.5px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.8px",
+                    background: "#1e3a8a", width: "80px", borderRadius: "0 6px 0 0",
+                  }}>Subtotal</th>
                 </tr>
               </thead>
               <tbody>
                 {cot.items.map((item, i) => (
-                  <tr key={i} style={{ background: i % 2 === 0 ? "#f8fafc" : "white", borderBottom: "1px solid #e2e8f0" }}>
-                    <td style={{ padding: "14px 16px", fontSize: "14px", color: "#1a1a2e" }}>{item.product}</td>
-                    <td style={{ padding: "14px 16px", fontSize: "14px", color: "#64748b", textAlign: "center" }}>{item.qty}</td>
-                    <td style={{ padding: "14px 16px", fontSize: "14px", color: "#1a1a2e", textAlign: "right" }}>{fmt(item.price)}</td>
-                    <td style={{ padding: "14px 16px", fontSize: "14px", color: "#1e3a8a", fontWeight: 600, textAlign: "right" }}>{fmt(item.qty * item.price)}</td>
+                  <tr key={i} style={{ background: i % 2 === 0 ? "#f8fafc" : "#ffffff" }}>
+                    <td style={{
+                      padding: "10px 12px", color: "#1e293b", fontSize: "11.5px",
+                      borderBottom: "1px solid #e2e8f0",
+                    }}>{item.product}</td>
+                    <td style={{
+                      padding: "10px 8px", color: "#64748b", fontSize: "11.5px",
+                      textAlign: "center", borderBottom: "1px solid #e2e8f0",
+                    }}>{item.qty}</td>
+                    <td style={{
+                      padding: "10px 12px", color: "#1e293b", fontSize: "11.5px",
+                      textAlign: "right", borderBottom: "1px solid #e2e8f0",
+                    }}>{fmt(item.price)}</td>
+                    <td style={{
+                      padding: "10px 12px", color: "#1e3a8a", fontSize: "11.5px",
+                      fontWeight: 700, textAlign: "right", borderBottom: "1px solid #e2e8f0",
+                    }}>{fmt(item.qty * item.price)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
 
             {/* Totals */}
-            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "32px" }}>
-              <div style={{ width: "280px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid #e2e8f0" }}>
-                  <span style={{ fontSize: "14px", color: "#64748b" }}>Subtotal</span>
-                  <span style={{ fontSize: "14px", color: "#1a1a2e", fontWeight: 500 }}>{fmt(subtotal)}</span>
+            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "24px" }}>
+              <div style={{ width: "200px" }}>
+                <div style={{
+                  display: "flex", justifyContent: "space-between", padding: "6px 0",
+                  borderBottom: "1px solid #e2e8f0",
+                }}>
+                  <span style={{ fontSize: "11px", color: "#64748b" }}>Subtotal</span>
+                  <span style={{ fontSize: "11px", color: "#1e293b", fontWeight: 500 }}>{fmt(subtotal)}</span>
                 </div>
-                <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid #e2e8f0" }}>
-                  <span style={{ fontSize: "14px", color: "#64748b" }}>ITBIS ({cot.taxRate * 100}%)</span>
-                  <span style={{ fontSize: "14px", color: "#1a1a2e", fontWeight: 500 }}>{fmt(tax)}</span>
+                <div style={{
+                  display: "flex", justifyContent: "space-between", padding: "6px 0",
+                  borderBottom: "1px solid #e2e8f0",
+                }}>
+                  <span style={{ fontSize: "11px", color: "#64748b" }}>ITBIS ({cot.taxRate * 100}%)</span>
+                  <span style={{ fontSize: "11px", color: "#1e293b", fontWeight: 500 }}>{fmt(tax)}</span>
                 </div>
-                <div style={{ display: "flex", justifyContent: "space-between", padding: "12px 0", marginTop: "4px" }}>
-                  <span style={{ fontSize: "18px", color: "#1e3a8a", fontWeight: 700 }}>TOTAL</span>
-                  <span style={{ fontSize: "18px", color: "#1e3a8a", fontWeight: 800 }}>{fmt(total)}</span>
+                <div style={{
+                  display: "flex", justifyContent: "space-between", padding: "10px 0 4px",
+                  borderTop: "2px solid #1e3a8a", marginTop: "4px",
+                }}>
+                  <span style={{ fontSize: "15px", color: "#1e3a8a", fontWeight: 800 }}>TOTAL</span>
+                  <span style={{ fontSize: "15px", color: "#1e3a8a", fontWeight: 800 }}>{fmt(total)}</span>
                 </div>
               </div>
             </div>
 
             {/* Conditions */}
-            <div style={{ background: "#f1f5f9", borderRadius: "10px", padding: "20px 24px", marginBottom: "32px" }}>
-              <p style={{ fontSize: "12px", fontWeight: 700, color: "#1e3a8a", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "10px" }}>
-                Condiciones
-              </p>
+            <div style={{
+              background: "#f1f5f9", borderRadius: "8px",
+              padding: "14px 18px", marginBottom: "24px",
+              borderLeft: "3px solid #3b82f6",
+            }}>
+              <p style={{
+                fontSize: "9.5px", fontWeight: 700, color: "#1e3a8a",
+                textTransform: "uppercase", letterSpacing: "1px", marginBottom: "8px",
+              }}>Condiciones</p>
               {cot.conditions.map((c, i) => (
-                <p key={i} style={{ fontSize: "13px", color: "#475569", lineHeight: 1.7 }}>{c}</p>
+                <p key={i} style={{ fontSize: "10.5px", color: "#475569", lineHeight: 1.6 }}>{c}</p>
               ))}
             </div>
 
             {/* Footer */}
-            <div style={{ borderTop: "2px solid #1e3a8a", paddingTop: "16px", display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#3b82f6" }} />
-                <span style={{ fontSize: "12px", color: "#64748b" }}>{emisor.email}</span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#3b82f6" }} />
-                <span style={{ fontSize: "12px", color: "#64748b" }}>{emisor.website}</span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#3b82f6" }} />
-                <span style={{ fontSize: "12px", color: "#64748b" }}>{emisor.phone}</span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#3b82f6" }} />
-                <span style={{ fontSize: "12px", color: "#64748b" }}>{emisor.address}</span>
-              </div>
+            <div style={{
+              borderTop: "1px solid #cbd5e1", paddingTop: "12px",
+              display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 16px",
+            }}>
+              {[emisor.email, emisor.website, emisor.phone, emisor.address].map((val, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <div style={{
+                    width: "5px", height: "5px", borderRadius: "50%",
+                    background: "#3b82f6", flexShrink: 0,
+                  }} />
+                  <span style={{ fontSize: "9.5px", color: "#64748b" }}>{val}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -287,20 +373,15 @@ function CotizacionDoc({ cot }: { cot: (typeof cotizaciones)[0] }) {
 export default function CotizacionesPage() {
   return (
     <div style={{ padding: "32px" }}>
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1
-            className="text-2xl font-bold"
-            style={{ fontFamily: "Outfit, sans-serif", color: "#F1F5F9" }}
-          >
-            Cotizaciones
-          </h1>
-          <p className="text-sm mt-1" style={{ color: "#64748B" }}>
-            {cotizaciones.length} cotizaciones generadas
-          </p>
-        </div>
+      <div style={{ marginBottom: "32px" }}>
+        <h1 style={{
+          fontFamily: "Outfit, sans-serif", fontWeight: 700,
+          fontSize: "22px", color: "#F1F5F9",
+        }}>Cotizaciones</h1>
+        <p style={{ fontSize: "13px", color: "#64748B", marginTop: "4px" }}>
+          {cotizaciones.length} cotizaciones generadas
+        </p>
       </div>
-
       {cotizaciones.map((cot) => (
         <CotizacionDoc key={cot.id} cot={cot} />
       ))}
