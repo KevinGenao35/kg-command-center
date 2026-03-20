@@ -98,16 +98,7 @@ function CotizacionDoc({ cot }: { cot: (typeof cotizaciones)[0] }) {
       const pdf = new jsPDF("p", "mm", "a4");
       const pageW = pdf.internal.pageSize.getWidth();
       const pageH = pdf.internal.pageSize.getHeight();
-      const imgRatio = canvas.width / canvas.height;
-      let finalW = pageW;
-      let finalH = pageW / imgRatio;
-      if (finalH > pageH) {
-        finalH = pageH;
-        finalW = pageH * imgRatio;
-      }
-      const offsetX = (pageW - finalW) / 2;
-      const offsetY = (pageH - finalH) / 2;
-      pdf.addImage(imgData, "PNG", offsetX, offsetY, finalW, finalH);
+      pdf.addImage(imgData, "PNG", 0, 0, pageW, pageH);
       pdf.save(`${cot.id}-${cot.client.name.replace(/\s+/g, "-")}.pdf`);
     } catch (err) {
       console.error("PDF generation failed:", err);
@@ -184,7 +175,7 @@ function CotizacionDoc({ cot }: { cot: (typeof cotizaciones)[0] }) {
             width: "595px",  /* A4 at 72dpi */
             minHeight: "842px",
             background: "white",
-            borderRadius: "4px",
+            borderRadius: "0px",
             overflow: "hidden",
             position: "relative",
           }}
