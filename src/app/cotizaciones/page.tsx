@@ -18,9 +18,8 @@ const cotizaciones = [
       rnc: "Pendiente",
     },
     items: [
-      { product: "Contratacion de empresa de marketing digital", qty: 1, price: 1000 },
-      { product: "Diseno de campana de marketing", qty: 1, price: 1500 },
-      { product: "Pago de publicidad, Ads Meta, Google y TikTok", qty: 1, price: 1000 },
+      { product: "Diseño de campaña de marketing", qty: 1, price: 2000 },
+      { product: "Pago de publicidad, Ads Meta, Google y TikTok", qty: 1, price: 1500 },
     ],
     conditions: [
       "Forma de pago: Transferencia bancaria / Deposito",
