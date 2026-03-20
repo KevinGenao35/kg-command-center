@@ -89,15 +89,25 @@ function CotizacionDoc({ cot }: { cot: (typeof cotizaciones)[0] }) {
       const html2canvas = (await import("html2canvas-pro")).default;
       const { jsPDF } = await import("jspdf");
       const canvas = await html2canvas(printRef.current, {
-        scale: 2,
+        scale: 3,
         useCORS: true,
         backgroundColor: "#ffffff",
+        logging: false,
       });
       const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF("p", "mm", "a4");
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
+      const imgRatio = canvas.width / canvas.height;
+      let finalW = pageW;
+      let finalH = pageW / imgRatio;
+      if (finalH > pageH) {
+        finalH = pageH;
+        finalW = pageH * imgRatio;
+      }
+      const offsetX = (pageW - finalW) / 2;
+      const offsetY = (pageH - finalH) / 2;
+      pdf.addImage(imgData, "PNG", offsetX, offsetY, finalW, finalH);
       pdf.save(`${cot.id}-${cot.client.name.replace(/\s+/g, "-")}.pdf`);
     } catch (err) {
       console.error("PDF generation failed:", err);
@@ -181,33 +191,27 @@ function CotizacionDoc({ cot }: { cot: (typeof cotizaciones)[0] }) {
         >
           {/* Top accent bar */}
           <div style={{
-            height: "6px", width: "100%",
+            height: "5px", width: "100%",
             background: "linear-gradient(90deg, #1e3a8a, #3b82f6, #1e3a8a)",
           }} />
 
-          {/* Right side accent stripe */}
+          {/* Left side accent stripe (thin) */}
           <div style={{
-            position: "absolute", top: 0, right: 0,
-            width: "48px", height: "100%",
-            background: "linear-gradient(180deg, #1e3a8a 0%, #2563eb 50%, #1e3a8a 100%)",
-            opacity: 0.9,
+            position: "absolute", top: 0, left: 0,
+            width: "4px", height: "100%",
+            background: "linear-gradient(180deg, #1e3a8a 0%, #3b82f6 50%, #1e3a8a 100%)",
           }} />
 
-          {/* Content area */}
-          <div style={{ padding: "36px 80px 36px 40px", position: "relative", zIndex: 1 }}>
+          {/* Content area - proper A4 margins */}
+          <div style={{ padding: "32px 40px 40px 40px", position: "relative", zIndex: 1 }}>
 
-            {/* Logo + Company */}
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
-              <div style={{
-                width: "36px", height: "36px", borderRadius: "8px",
-                background: "linear-gradient(135deg, #1e3a8a, #3b82f6)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                color: "white", fontFamily: "Outfit, sans-serif", fontWeight: 800, fontSize: "18px",
-              }}>R</div>
-              <span style={{
-                fontFamily: "Outfit, sans-serif", fontWeight: 700,
-                fontSize: "15px", color: "#1e3a8a",
-              }}>Rice Intelligence</span>
+            {/* Logo */}
+            <div style={{ marginBottom: "16px" }}>
+              <img
+                src="/rice-logo.png"
+                alt="Rice Intelligence"
+                style={{ height: "32px", width: "auto" }}
+              />
             </div>
 
             {/* Title */}
