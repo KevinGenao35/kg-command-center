@@ -203,10 +203,10 @@ function CotizacionDoc({ cot }: { cot: (typeof cotizaciones)[0] }) {
           }} />
 
           {/* Content area - proper A4 margins */}
-          <div style={{ padding: "32px 40px 40px 40px", position: "relative", zIndex: 1 }}>
+          <div style={{ padding: "16px 40px 40px 40px", position: "relative", zIndex: 1 }}>
 
             {/* Logo */}
-            <div style={{ marginBottom: "16px" }}>
+            <div style={{ marginBottom: "8px" }}>
               <img
                 src="/rice-logo.png"
                 alt="Rice Intelligence"
