@@ -7,6 +7,35 @@ import { Download, Printer, FileText } from "lucide-react";
 
 const cotizaciones = [
   {
+    id: "COT-0003",
+    title: "Agente de IA con Clonacion de Voz",
+    date: "20 de marzo, 2026",
+    client: {
+      name: "Robert Santana (Digi Brand RD)",
+      address: "Pendiente",
+      phone: "+1 (829) 490-7117",
+      email: "rsantana@goldmancapital.do",
+      rnc: "Pendiente",
+    },
+    items: [
+      { product: "Desarrollo de Agente de IA (flujo conversacional + entrenamiento con datos)", qty: 1, price: 750 },
+      { product: "Clonacion de voz profesional (ElevenLabs)", qty: 1, price: 250 },
+      { product: "Integracion WhatsApp Business API", qty: 1, price: 200 },
+      { product: "Oficina Virtual ConvoCore (dashboard de equipo + escalacion hibrida)", qty: 1, price: 250 },
+      { product: "Automatizacion de procesamiento de pagos por transferencia", qty: 1, price: 150 },
+      { product: "Pruebas, calibracion de tono y despliegue", qty: 1, price: 150 },
+    ],
+    conditions: [
+      "Forma de pago: Transferencia bancaria / Deposito",
+      "Vigencia de la cotizacion: 30 dias naturales (hasta el 18 de abril de 2026)",
+      "Tiempo estimado de entrega: 14-30 dias habiles a partir del pago",
+      "Mantenimiento mensual: $97 USD/mes (soporte continuo, mejoras y optimizacion del agente)",
+      "Costos de plataformas asumidos por el cliente: Voiceflow ($60 USD/mes) + ElevenLabs ($11-$22 USD/mes)",
+      "Precio especial: $1,750 USD (precio estandar: $2,500 USD)",
+    ],
+    taxRate: 0.18,
+  },
+  {
     id: "COT-0002",
     title: "Marketing Digital",
     date: "19 de marzo, 2026",
