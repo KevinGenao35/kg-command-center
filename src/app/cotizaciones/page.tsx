@@ -40,11 +40,11 @@ const cotizaciones = [
     title: "Marketing Digital",
     date: "19 de marzo, 2026",
     client: {
-      name: "Iliana Olivero",
+      name: "CosmeLab Belleza Ideal SRL",
       address: "Calle Abraham No. 200",
       phone: "+1 (809) 969-4607",
       email: "iolivero@morganna.net",
-      rnc: "Pendiente",
+      rnc: "132336011",
     },
     items: [
       { product: "Diseño de campaña de marketing", qty: 1, price: 2000 },
@@ -63,11 +63,11 @@ const cotizaciones = [
     title: "Servicios de Tecnologia",
     date: "19 de marzo, 2026",
     client: {
-      name: "Iliana Olivero",
+      name: "CosmeLab Belleza Ideal SRL",
       address: "Calle Abraham No. 200",
       phone: "+1 (809) 969-4607",
       email: "iolivero@morganna.net",
-      rnc: "Pendiente",
+      rnc: "132336011",
     },
     items: [
       { product: "Construccion de pagina web", qty: 1, price: 997 },
@@ -88,13 +88,13 @@ const cotizaciones = [
 ];
 
 const emisor = {
-  name: "Rice Intelligence, S.R.L.",
+  name: "Rice Intelligence, SRL",
   address: "Calle Teatro Nacional No. 150",
   city: "El Millon, Santo Domingo, D.N.",
   phone: "+1 (829) 598-9200",
   email: "info@riceintelligence.com",
   website: "www.riceintelligence.com",
-  rnc: "1-33-60315-2",
+  rnc: "133603152",
 };
 
 function fmt(n: number) {

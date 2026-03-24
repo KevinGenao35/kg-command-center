@@ -15,6 +15,7 @@ import {
   ChevronRight,
   Zap,
   Receipt,
+  FolderOpen,
 } from "lucide-react";
 
 const navItems = [
@@ -26,6 +27,7 @@ const navItems = [
   { href: "/finance", label: "Finance", icon: Wallet },
   { href: "/calendar", label: "Calendar", icon: CalendarDays },
   { href: "/cotizaciones", label: "Cotizaciones", icon: Receipt },
+  { href: "/documentos", label: "Documentos", icon: FolderOpen },
 ];
 
 export default function Sidebar() {
